@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Redirect</title>
+</head>
+<body>
+    <h1>Test Redirect</h1>
+    <button onclick="testRedirect()">Test Roadmap Link</button>
+    
+    <script>
+        function testRedirect() {
+            const role = "Python Developer";
+            const level = "Beginner";
+            const url = `/roadmap?role=${encodeURIComponent(role)}&level=${encodeURIComponent(level)}`;
+            console.log("Redirecting to:", url);
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>
