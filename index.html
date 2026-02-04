@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Roadmap Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a237e 50%, #0d47a1 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e6ed;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(15, 20, 25, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        .form-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            position: relative;
+        }
+        .searchable-select {
+            position: relative;
+            width: 100%;
+        }
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(26, 35, 126, 0.8);
+            color: #e0e6ed;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 0 3px rgba(0, 255, 255, 0.2);
+            background: rgba(26, 35, 126, 1);
+        }
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(26, 35, 126, 0.95);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .dropdown-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            color: #e0e6ed;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .dropdown-item:hover, .dropdown-item.highlighted {
+            background: rgba(0, 255, 255, 0.2);
+            color: #00ffff;
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #00ffff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        select {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(26, 35, 126, 0.8);
+            color: #e0e6ed;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%2300ffff" d="M6 9L1.5 4.5h9z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+        }
+        select:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 0 3px rgba(0, 255, 255, 0.2);
+            background: rgba(26, 35, 126, 1);
+        }
+        select:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #00ffff 0%, #0080ff 100%);
+            color: #0f1419;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+            position: relative;
+        }
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 255, 255, 0.6);
+            background: linear-gradient(135deg, #40ffff 0%, #4080ff 100%);
+        }
+        .generate-btn:active {
+            transform: translateY(-1px);
+        }
+        .generate-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(15, 20, 25, 0.3);
+            border-radius: 50%;
+            border-top-color: #0f1419;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .roadmap {
+            margin-top: 40px;
+            animation: fadeInUp 0.6s ease;
+        }
+        .roadmap-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #00ffff 0%, #0080ff 100%);
+            color: #0f1419;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+        }
+        .roadmap-title {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .step {
+            padding: 20px;
+            margin: 15px 0;
+            background: rgba(26, 35, 126, 0.6);
+            border-radius: 12px;
+            border-left: 5px solid #00ffff;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            animation: slideInLeft 0.5s ease forwards;
+            opacity: 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .step:hover {
+            transform: translateX(15px);
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.3);
+            background: rgba(26, 35, 126, 0.8);
+            border-color: #00ffff;
+        }
+        
+        /* Visual Diagram Shapes */
+        .step-shape {
+            width: 60px;
+            height: 60px;
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #0f1419;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .cloud-shape {
+            background: linear-gradient(135deg, #00ffff 0%, #40ffff 100%);
+            border-radius: 50px;
+            position: relative;
+        }
+        .cloud-shape::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #00ffff 0%, #40ffff 100%);
+            border-radius: 50%;
+        }
+        .cloud-shape::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 15px;
+            width: 15px;
+            height: 15px;
+            background: linear-gradient(135deg, #00ffff 0%, #40ffff 100%);
+            border-radius: 50%;
+        }
+        
+        .oval-shape {
+            background: linear-gradient(135deg, #0080ff 0%, #4080ff 100%);
+            border-radius: 50%;
+            transform: scaleX(1.3);
+        }
+        
+        .circle-shape {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+            border-radius: 50%;
+        }
+        
+        .triangle-shape {
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 52px solid #ffd93d;
+            background: none;
+            position: relative;
+            margin-right: 20px;
+        }
+        .triangle-shape::after {
+            content: attr(data-step);
+            position: absolute;
+            top: 15px;
+            left: -8px;
+            color: #0f1419;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .diamond-shape {
+            background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+            transform: rotate(45deg);
+            border-radius: 8px;
+        }
+        .diamond-shape span {
+            transform: rotate(-45deg);
+            display: block;
+        }
+        
+        /* Connecting Lines */
+        .roadmap-container {
+            position: relative;
+        }
+        .connecting-line {
+            position: absolute;
+            left: 50px;
+            width: 2px;
+            background: linear-gradient(to bottom, #00ffff, rgba(0, 255, 255, 0.3));
+            z-index: -1;
+        }
+        .step-content {
+            flex: 1;
+            font-size: 16px;
+            color: #e0e6ed;
+            line-height: 1.5;
+        }
+        .total-steps {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            font-weight: 600;
+            color: #00ffff;
+        }
+        .hidden { display: none; }
+        
+        /* Interactive particles effect */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(0, 128, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            border-radius: 20px;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8); }
+        }
+        
+        .generate-btn {
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .form-section { grid-template-columns: 1fr; gap: 20px; }
+            .container { padding: 20px; }
+            h1 { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Learning Roadmap Generator</h1>
+        
+        <div class="form-section">
+            <div class="form-group">
+                <label for="role">Career Role</label>
+                <div class="searchable-select">
+                    <input type="text" id="roleSearch" class="search-input" placeholder="Search or select your career path..." autocomplete="off">
+                    <div id="roleDropdown" class="dropdown-list"></div>
+                    <input type="hidden" id="role" name="role">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="level">Skill Level</label>
+                <select id="level">
+                    <option value="">Select your level...</option>
+                    <option value="Beginner">🌱 Beginner</option>
+                    <option value="Intermediate">🌿 Intermediate</option>
+                    <option value="Advanced">🌳 Advanced</option>
+                </select>
+            </div>
+        </div>
+        
+        <button class="generate-btn" id="generateBtn" onclick="generateRoadmap()">Generate My Roadmap</button>
+        
+        <div id="roadmap" class="roadmap hidden">
+            <div class="roadmap-header">
+                <div class="roadmap-title" id="roadmapTitle"></div>
+                <div id="totalSteps"></div>
+            </div>
+            <div id="steps" class="roadmap-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // Available roles data
+        let allRoles = [];
+        let filteredRoles = [];
+        let selectedIndex = -1;
+        
+        // Load available roles with better error handling
+        async function loadRoles() {
+            try {
+                const response = await fetch('/api/roles');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                allRoles = await response.json();
+                filteredRoles = [...allRoles];
+                console.log('Received roles:', allRoles);
+                setupSearchableDropdown();
+            } catch (error) {
+                console.error('Error fetching roles:', error);
+                // Fallback roles
+                allRoles = [
+                    'UI/UX Designer',
+                    'Network Engineer',
+                    'Cybersecurity Specialist',
+                    'Data & Analytics Specialist',
+                    'Mobile App Developer',
+                    'Full-Stack Web Developer',
+                    'Rust Developer', 
+                    'Swift Developer',
+                    'Kotlin Developer',
+                    'PHP Developer',
+                    'Go Developer',
+                    'TypeScript Developer',
+                    'JavaScript Developer',
+                    'C# Developer',
+                    'C++ Developer',
+                    'Java Developer',
+                    'Python Developer',
+                    'Software Developer',
+                    'Data Scientist',
+                    'DevOps Engineer'
+                ];
+                filteredRoles = [...allRoles];
+                setupSearchableDropdown();
+            }
+        }
+        
+        function setupSearchableDropdown() {
+            const searchInput = document.getElementById('roleSearch');
+            const dropdown = document.getElementById('roleDropdown');
+            const hiddenInput = document.getElementById('role');
+            
+            // Show all options initially
+            updateDropdown();
+            
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                filteredRoles = allRoles.filter(role => 
+                    role.toLowerCase().includes(query)
+                );
+                selectedIndex = -1;
+                updateDropdown();
+                showDropdown();
+            });
+            
+            // Show dropdown on focus
+            searchInput.addEventListener('focus', function() {
+                showDropdown();
+            });
+            
+            // Hide dropdown on blur (with delay for clicks)
+            searchInput.addEventListener('blur', function() {
+                setTimeout(() => hideDropdown(), 150);
+            });
+            
+            // Keyboard navigation
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, filteredRoles.length - 1);
+                    updateHighlight();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateHighlight();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedIndex >= 0) {
+                        selectRole(filteredRoles[selectedIndex]);
+                    }
+                } else if (e.key === 'Escape') {
+                    hideDropdown();
+                }
+            });
+        }
+        
+        function updateDropdown() {
+            const dropdown = document.getElementById('roleDropdown');
+            dropdown.innerHTML = '';
+            
+            filteredRoles.forEach((role, index) => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.textContent = role;
+                item.addEventListener('click', () => selectRole(role));
+                dropdown.appendChild(item);
+            });
+        }
+        
+        function updateHighlight() {
+            const items = document.querySelectorAll('.dropdown-item');
+            items.forEach((item, index) => {
+                item.classList.toggle('highlighted', index === selectedIndex);
+            });
+        }
+        
+        function showDropdown() {
+            document.getElementById('roleDropdown').style.display = 'block';
+        }
+        
+        function hideDropdown() {
+            document.getElementById('roleDropdown').style.display = 'none';
+        }
+        
+        function selectRole(role) {
+            document.getElementById('roleSearch').value = role;
+            document.getElementById('role').value = role;
+            hideDropdown();
+        }
+        // Load roles when page loads
+        document.addEventListener('DOMContentLoaded', loadRoles);
+
+        function generateRoadmap() {
+            const role = document.getElementById('role').value;
+            const level = document.getElementById('level').value;
+            
+            if (!role || !level) {
+                alert('Please select both role and level!');
+                return;
+            }
+            
+            // Redirect to new page with parameters
+            window.location.href = `/roadmap?role=${encodeURIComponent(role)}&level=${encodeURIComponent(level)}`;
+        }
+        
+        function displayRoadmap(data) {
+            // Immediately show the roadmap container
+            const roadmapDiv = document.getElementById('roadmap');
+            roadmapDiv.classList.remove('hidden');
+            
+            // Scroll to roadmap smoothly
+            roadmapDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            document.getElementById('roadmapTitle').textContent = 
+                `🚀 ${data.role} - ${data.level} Level`;
+            
+            const stepsDiv = document.getElementById('steps');
+            stepsDiv.innerHTML = '';
+            
+            // Shape types for different steps
+            const shapes = ['cloud', 'oval', 'circle', 'triangle', 'diamond'];
+            const shapeEmojis = ['☁️', '🥚', '⭕', '🔺', '💎'];
+            
+            data.roadmap.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'step';
+                stepDiv.style.animationDelay = `${index * 0.15}s`;
+                
+                // Determine shape based on step index
+                const shapeType = shapes[index % shapes.length];
+                const shapeEmoji = shapeEmojis[index % shapeEmojis.length];
+                let shapeHtml = '';
+                
+                if (shapeType === 'triangle') {
+                    shapeHtml = `<div class="step-shape triangle-shape" data-step="${index + 1}"></div>`;
+                } else {
+                    shapeHtml = `<div class="step-shape ${shapeType}-shape"><span>${index + 1}</span></div>`;
+                }
+                
+                stepDiv.innerHTML = `
+                    ${shapeHtml}
+                    <div class="step-content">
+                        <strong>${shapeEmoji} Step ${index + 1}:</strong> ${step}
+                    </div>
+                `;
+                stepsDiv.appendChild(stepDiv);
+                
+                // Add connecting line (except for last step)
+                if (index < data.roadmap.length - 1) {
+                    const line = document.createElement('div');
+                    line.className = 'connecting-line';
+                    line.style.top = `${(index + 1) * 95 + 60}px`;
+                    line.style.height = '35px';
+                    stepsDiv.appendChild(line);
+                }
+            });
+            
+            document.getElementById('totalSteps').innerHTML = 
+                `🎯 ${data.roadmap.length} Learning Steps | 📊 Visual Roadmap | ${data.level} Level`;
+        }
+    </script>
+</body>
+</html>
